@@ -106,22 +106,20 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 
   
   filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
-  
+  filename = filename.replace("/","");
   print "export:"+filename;
 #  print page;
-#  try :
-  pagefile = open("output/"+filename,"w");
-#    print >> pagefile, page;
-#  finally:
-  pagefile.close();
+  try :
+    pagefile = open("output/"+filename,"w");
+    print >> pagefile, page;
   
-  #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
-  #print >> shell, "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
-
+    print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+    print >> shell, "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+  finally:
 #  print "semaster="+semaster;
 #  print "subject="+subject;
 #  print page;
-  return;
+    return;
 
 div_used = "false";
 for line in open(sys.argv[1]):
