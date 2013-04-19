@@ -38,8 +38,8 @@ def unify_data(item_data,item_name) :
   if item_name=="所属课程组": 
     item_data = item_data.replace("组","");
     item_data = item_data.replace("趣味经济学","趣味经济");
-    item_data = item_data.replace("趣味经济","趣味经济");
-    item_data = item_data.replace("经济","趣味经济");
+    if item_data == "经济": item_data = "趣味经济";
+
     item_data = item_data.replace("课","");
     item_data = item_data.replace("English","英语");
     item_data = item_data.replace("english","英语");
