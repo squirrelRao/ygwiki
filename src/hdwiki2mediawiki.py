@@ -309,11 +309,12 @@ for subject in subject_school_dict:
       page_key = subject+"-"+semaster+"-"+school;
       if page_key in page_dict:
         if (old_semaster!=semaster) :
-          template += "\nlist" + str(listnum) + " = " + semaster;
+          template += "\n|list" + str(listnum) + " = " + semaster;
           listnum = listnum + 1;
           old_semaster = semaster;        
-        template += "\ngroup" + str(listnum) + " = " + school;
-        template += "\nlist" + str(listnum) + " = ";
+        template += "\n|group" + str(listnum) + " = " + school;
+        template += "\n|list" + str(listnum) + " = ";
+        listnum = listnum + 1;
 
         for page in page_dict[page_key]:
           template += page + " - ";
@@ -327,7 +328,7 @@ for subject in subject_school_dict:
     
     pagefile = open("output/"+filename,"w");
     print >> pagefile, template; 
-#    print template;
+    print template;
   
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
