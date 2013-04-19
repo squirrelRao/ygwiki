@@ -33,16 +33,50 @@ def getdata(str) :
 def unify_data(item_data,item_name) :
   if item_name=="所属课程组": 
     item_data = item_data.replace("组","");
-    item_data = item_data.replace("趣味经济学","经济");
-    item_data = item_data.replace("趣味经济","经济");
+    item_data = item_data.replace("趣味经济学","趣味经济");
+    item_data = item_data.replace("趣味经济","趣味经济");
+    item_data = item_data.replace("经济","趣味经济");
     item_data = item_data.replace("课","");
     item_data = item_data.replace("English","英语");
     item_data = item_data.replace("english","英语");
     item_data = item_data.replace("计算机儿童","计算机");
     item_data = item_data.replace("科普","兴趣");
     item_data = item_data.replace("国学","语文");
-    item_data = item_data.replace("艺术音乐","音乐");
+    item_data = item_data.replace("艺术音乐","艺术");
+    item_data = item_data.replace("美术","艺术");
+    item_data = item_data.replace("舞蹈","艺术");
+    if item_data.find("艺术")>=0: item_data = "艺术";
+    item_data = item_data.replace("音乐","艺术");
+    if item_data == "":  item_data = "未分类";
   return item_data 
+
+def unify_basic_info(basic_info):
+  semaster = basic_info[0];
+  if semaster == "2010春": semaster="2010年春";
+  if semaster == "2010秋": semaster="2010年秋";
+  if semaster == "2011春": semaster="2011年春";
+  if semaster == "2011秋": semaster="2011年秋";
+  if semaster == "2012春": semaster="2012年春";
+  if semaster == "2012秋": semaster="2012年秋";
+  if semaster == "2013春": semaster="2013年春";
+  school = basic_info[1];
+  if school == "信心": school = "信心学校";
+  if school == "育才学校": school = "朝阳育才";
+  if school == "光明": school = "光明学校";
+  subject = basic_info[2];
+  subject = subject.replace("课","");
+  if subject == "兴趣科普": subject = "科普";
+  if subject == "趣味经济": subject = "趣味经济学";
+  if subject == "语文国学启蒙": subject = "国学";
+  if subject == "经济": subject = "趣味经济学";
+  if subject == "兴趣": subject = "科普";
+  if subject == "计算机": subject = "计算机（儿童）";
+  if subject == "计算机儿童": subject = "计算机（儿童）";
+  if subject == "四年级英语": subject = "英语四年级";
+  if subject == "五年级英语": subject = "英语五年级";
+  if subject == "六年级英语": subject = "英语六年级";
+  
+  return [semaster,school,subject,basic_info[3]];
 
 def getcontent(str) :
   start_pos=str.find(">")+len(">");
@@ -60,7 +94,15 @@ content_value_set = {};
 item_parsed = "true"
 content_parsed = "end"
 
+group_subject_dict = {};
+subject_semaster = {};
+semaster_page = {};
+
 def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx) :
+  global group_subject_dict;
+  global subject_semaster;
+  global semaster_page;
+  
   page = "{{Infobox TeachingPlan";
   name = "";
   for item in item_key_list:
@@ -99,8 +141,10 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     page = page + "\n" + "[[Category:在" + school +"使用过的教案]]";
 
   #增加导航
-  if "所属课程组" in item_value_set: 
-    page = page + "\n" + "{{" + item_value_set["所属课程组"]+"教案}}";
+  page = page + "\n" + "{{" + subject +"教案}}";
+
+#  if "所属课程组" in item_value_set: 
+#    page = page + "\n" + "{{" + item_value_set["所属课程组"]+"教案}}";
   if school != "":
     page = page + "\n" + "{{" + school +"教案}}";
 
@@ -108,16 +152,39 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
   filename = filename.replace("/","");
   print "export:"+filename;
-#  print page;
+  #print page;
   try :
     pagefile = open("output/"+filename,"w");
     print >> pagefile, page;
   
-    print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
+
+    #update template and category map
+    if not "所属课程组" in item_value_set or subject=="" : return;
+    
+    group = item_value_set["所属课程组"];
+    if group in group_subject_dict:
+      group_subject_dict[group].add(subject);
+    else:
+      group_subject_dict[group]=set([subject]);
+
+    school_semaster = school+"-"+semaster;
+    group_subject = subject;
+    if group_subject in subject_semaster:
+      subject_semaster[group_subject].add(school_semaster);
+    else:
+      subject_semaster[group_subject]=set([school_semaster]);
+
+    semaster_page_key = group_subject+"-"+school_semaster;
+    if semaster_page_key in semaster_page:
+      semaster_page[semaster_page_key].add("[[filename|"+name+"]]");
+    else:
+      semaster_page[semaster_page_key]=["[[filename|"+name+"]]"];
+
   finally:
 #  print "semaster="+semaster;
-#  print "subject="+subject;
+#    print "subject="+subject;
 #  print page;
     return;
 
@@ -126,7 +193,7 @@ for line in open(sys.argv[1]):
   line = line.rstrip();
   if re.match("&quot;[0-9]",line) :
     if len(item_value_set) > 0: build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
-    
+
     #start a new semaster-subject
     print line;
     lesson_idx_list = [];
@@ -143,27 +210,23 @@ for line in open(sys.argv[1]):
     semaster = "";
     school = "";
     subject = "";
-    wikitype = "";
+    wikitype = "课程提纲";
     item_value_set.clear();
     content_value_set.clear();
     
     basic_info = title.split("-");
     if len(basic_info)==1: basic_info = title.split("—");
     if len(basic_info)>=4:
-      semaster = basic_info[0];
-      school = basic_info[1];
-      if school == "信心": school = "信心学校";
-      if school == "育才学校": school = "朝阳育才";
-      if school == "光明": school = "光明学校";
-      subject = basic_info[2];
-      wikitype = basic_info[3];
-      
+      [semaster,school,subject,wikitype] = unify_basic_info(basic_info);
+     
       print "semaster\t"+semaster  
       print "school\t"+school  
       print "subject\t"+subject  
       print "wikitype\t"+wikitype 
       print 
-  
+    else :
+      subject = title;
+
     new_subject = "true";
   
   divname = re.search("<(div|DIV) class=.*hdwiki_tmml.*</(div|DIV)>",line);
@@ -196,7 +259,7 @@ for line in open(sys.argv[1]):
     #print item_name + "=" + item_data;
 
   for item_key in item_key_list:
-    item_start = re.search(">*"+item_key+".*<",line);
+    item_start = re.search("(strong|STRONG)>*"+item_key+".*<",line);
     if item_start:
       item_name = item_key;
       item_data = "";
@@ -235,5 +298,12 @@ for line in open(sys.argv[1]):
       content_name = content_key;
       content_data = "";
       content_parsed = "start"
+
+#build template:
+
+for subject in subject_semaster:
+  for semaster in subject_semaster[subject]:
+    print subject+"\t"+semaster;
+  print;
 
 shell.close(); 
