@@ -56,6 +56,7 @@ def unify_data(item_data,item_name) :
 
 def unify_basic_info(basic_info):
   semaster = basic_info[0];
+  semaster = semaster.replace("季","");
   if semaster == "2010春": semaster="2010年春";
   if semaster == "2010秋": semaster="2010年秋";
   if semaster == "2011春": semaster="2011年春";
@@ -328,7 +329,7 @@ for subject in subject_school_dict:
     
     pagefile = open("output/"+filename,"w");
     print >> pagefile, template; 
-    print template;
+    #print template;
   
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
