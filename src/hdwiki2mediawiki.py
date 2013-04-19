@@ -328,7 +328,7 @@ for subject in subject_school_dict:
     
     pagefile = open("output/"+filename,"w");
     print >> pagefile, template; 
-    print template;
+    #print template;
   
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
