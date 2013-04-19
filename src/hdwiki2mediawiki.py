@@ -113,7 +113,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     pagefile = open("output/"+filename,"w");
     print >> pagefile, page;
   
-    print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+    print "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
   finally:
 #  print "semaster="+semaster;
