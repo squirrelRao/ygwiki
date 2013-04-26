@@ -99,6 +99,10 @@ class MobileContext extends ContextSource {
 
 	public function isMobileDevice() {
 		$detect = new Mobile_Detect;
+
+		if ($detect->isTablet()) {
+			return false;
+		}
 		
 		if ($detect->isMobile()) {
 			return true;
