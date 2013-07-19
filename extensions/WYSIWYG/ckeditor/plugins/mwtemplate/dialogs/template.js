@@ -32,14 +32,8 @@ CKEDITOR.dialog.add( 'MWTemplate', function( editor ) {
                 content.Trim();
                 content = content.replace(/\r?\n/g, 'fckLR');
                 // check for a tag
-                if (el = content.match(/^{{[\w\d_-]+((\|.*?)*)}}$/)) {
-                    tag = '<span class="fck_mw_template">' + el[0] + '</span>';
-                    className = 'FCK__MWTemplate';
-                }
-                else {
-                    alert ('invalid content');
-                    return;
-                }
+                tag = '<span class="fck_mw_template">' +content+ '</span>';
+                className = 'FCK__MWTemplate';
                 var element = CKEDITOR.dom.element.createFromHtml(tag, editor.document),
                     newFakeObj = editor.createFakeElement( element, className, 'span' );
                 if ( this.fakeObj ) {
