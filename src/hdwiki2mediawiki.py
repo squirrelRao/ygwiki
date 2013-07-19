@@ -81,8 +81,9 @@ def unify_basic_info(basic_info):
   if subject == "四年级英语": subject = "英语四年级";
   if subject == "五年级英语": subject = "英语五年级";
   if subject == "六年级英语": subject = "英语六年级";
-  
-  return [semaster,school,subject,basic_info[3]];
+  wikitype = "课程提纲"
+
+  return [semaster,school,subject,wikitype];
 
 def getcontent(str) :
   start_pos=str.find(">")+len(">");
@@ -97,15 +98,17 @@ item_value_set = {};
 content_key_list = ["授课目标","授课内容","授课提纲","授课步骤","教学环境、材料需求","助教需求","其他请补充"];
 content_value_set = {};
 
-semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春"];
+semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春",""];
 
 item_parsed = "true"
 content_parsed = "end"
 
 subject_school_dict = {};
+semaster_school_dict = {};
 page_dict = {};
 
 def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx) :
+  global semaster_school_dict;
   global subject_school_dict;
   global page_dict;
   
@@ -123,8 +126,13 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     lesson_name=item_value_set["课程名称"];
   if lesson_name!="": name = lesson_name;
   elif subject != "": name = subject;
-  elif "所属课程组" in item_value_set: name = item_value_set["所属课程组"];
+  elif "所属课程组" in item_value_set: 
+    name = item_value_set["所属课程组"];
   page = page+"\n"+"| name = "+name+"教案";
+  
+  if "所属课程组" in item_value_set: 
+    group = item_value_set["所属课程组"];
+    print "group="+group;
   
   #select a title picture
   page = page+"\n"+"| image = Textbook.JPG";
@@ -144,7 +152,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   if "所属课程组" in item_value_set: 
     page = page + "\n" + "[[Category:" + item_value_set["所属课程组"]+"教案]]";
   if school != "":
-    page = page + "\n" + "[[Category:在" + school +"使用过的教案]]";
+    page = page + "\n" + "[[Category:" + semaster +"教案]]";
 
   #增加导航
   page = page + "\n" + "{{" + subject +"教案}}";
@@ -165,6 +173,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
 
     #update template and category map
+    #by-subject
     if subject=="" : return;
     
     if subject in subject_school_dict:
@@ -172,15 +181,25 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     else:
       subject_school_dict[subject]=set([school]);
 
+    #update template and category map
+    #by-semaster
+    if semaster =="" : return;
+    
+    if semaster in semaster_school_dict:
+      semaster_school_dict[semaster].add(school);
+    else:
+      semaster_school_dict[semaster]=set([school]);
+
     page_key = subject+"-"+semaster+"-"+school;
     if page_key in page_dict:
       page_dict[page_key].append("[["+filename+"|"+name+"]]");
     else:
       page_dict[page_key]=["[["+filename+"|"+name+"]]"];
-  
+    
   finally:
 
 #  print "semaster="+semaster;
+#    print "subject="+subject;
 #    print "subject="+subject;
 #  print page;
     return;
@@ -204,9 +223,9 @@ for line in open(sys.argv[1]):
     print "title\t"+title  
     print "author\t"+author  
     
-    semaster = "";
-    school = "";
-    subject = "";
+    semaster = "学期待补充";
+    school = "学校待补充";
+    subject = "学科待补充";
     wikitype = "课程提纲";
     item_value_set.clear();
     content_value_set.clear();
@@ -298,6 +317,7 @@ for line in open(sys.argv[1]):
 
 #build template:
 
+#subject template:
 old_semaster="";
 
 for subject in subject_school_dict:
@@ -329,7 +349,44 @@ for subject in subject_school_dict:
     
     pagefile = open("output/"+filename,"w");
     print >> pagefile, template; 
-    #print template;
+    print template;
+  
+    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+    print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
+ 
+#semaster template:
+old_semaster="";
+
+for subject in subject_school_dict:
+  #new subject!
+  listnum=1;
+  filename = "Template:"+subject+"教案";
+  template="{{Navbox\n|name="+subject+"教案\t|title = "+subject+"教案";
+  for semaster in semaster_list:
+    for school in subject_school_dict[subject]:
+      page_key = subject+"-"+semaster+"-"+school;
+      if page_key in page_dict:
+        if (old_semaster!=semaster) :
+          template += "\n|list" + str(listnum) + " = " + semaster;
+          listnum = listnum + 1;
+          old_semaster = semaster;        
+        template += "\n|group" + str(listnum) + " = " + school;
+        template += "\n|list" + str(listnum) + " = ";
+        listnum = listnum + 1;
+
+        for page in page_dict[page_key]:
+          template += page + " - ";
+
+        template = template[0:len(template)-2];
+
+  template += "\n}}" ;
+
+  if (template!=""):
+    print "export:"+filename;
+    
+    pagefile = open("output/"+filename,"w");
+    print >> pagefile, template; 
+    print template;
   
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
