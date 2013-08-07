@@ -81,7 +81,7 @@ def unify_basic_info(basic_info):
   if subject == "四年级英语": subject = "英语四年级";
   if subject == "五年级英语": subject = "英语五年级";
   if subject == "六年级英语": subject = "英语六年级";
-  wikitype = "课程提纲"
+  wikitype = "课程总结"
 
   return [semaster,school,subject,wikitype];
 
@@ -207,7 +207,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 div_used = "false";
 for line in open(sys.argv[1]):
   line = line.rstrip();
-  if re.match("|[0-9]",line) :
+  if line.find("课程总结|")>0 :
     if len(item_value_set) > 0: build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
 
     #start a new semaster-subject
@@ -215,9 +215,9 @@ for line in open(sys.argv[1]):
     lesson_idx_list = [];
       
 
-    title = line.split("|")[4].split("&quot")[0];
-    author = line.split("&quot;;&quot;")[3];
-    id = line.split("&quot;")[1];
+    title = line.split("|")[4];
+    author = line.split("|")[3];
+    id = line.split("|")[0];
     
     print "id\t"+id  
     print "title\t"+title  
@@ -226,7 +226,7 @@ for line in open(sys.argv[1]):
     semaster = "学期待补充";
     school = "学校待补充";
     subject = "学科待补充";
-    wikitype = "课程提纲";
+    wikitype = "课程总结";
     item_value_set.clear();
     content_value_set.clear();
     
@@ -251,7 +251,7 @@ for line in open(sys.argv[1]):
     lesson_idx_list.append(lesson_idx);
     div_used = "false";
 
-  plan_start = re.search("center.*上课准备提纲",line);
+  plan_start = re.search("center.*课程回顾",line);
   if plan_start:
     if new_subject == "false":
       if len(item_value_set) > 0:build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
