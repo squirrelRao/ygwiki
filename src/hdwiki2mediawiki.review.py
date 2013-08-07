@@ -175,11 +175,13 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
 
-    print "exporting:"+ref_filename;
-    pagefile = open("output/"+ref_filename,"w");
-    print >> pagefile, ref_page;
-  
-    print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
+    if ref_filename!=filename:
+      #write redirect page
+      print "exporting:"+ref_filename;
+      pagefile = open("output/"+ref_filename,"w");
+      print >> pagefile, ref_page;
+
+      print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
 
     #update template and category map
     #by-subject

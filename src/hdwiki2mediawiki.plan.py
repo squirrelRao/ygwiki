@@ -178,25 +178,50 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   ref_filename = ref_filename.replace("/","");
   ref_page = "#REDIRECT [[" + filename + "]]";
 
+  #update template and category map
+  #by-subject
+  if subject=="" : return;
 
-  #update template and try :
+  if subject in subject_school_dict:
+    subject_school_dict[subject].add(school);
+  else:
+    subject_school_dict[subject]=set([school]);
+  
+  #by-semaster
+  if semaster =="" : return;
+
+  if semaster in semaster_school_dict:
+    semaster_school_dict[semaster].add(school);
+  else:
+    semaster_school_dict[semaster]=set([school]);
+
+  #update page_key map
+  page_key = subject+"-"+semaster+"-"+school;
+  if page_key in page_dict:
+    page_dict[page_key].append("[["+filename+"|"+name+"]]");
+  else:
+    page_dict[page_key]=["[["+filename+"|"+name+"]]"];
+
+  try:
     print "exporting:"+filename;
     pagefile = open("output/"+filename,"w");
     print >> pagefile, page;
-  
+
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
 
-    print "exporting:"+ref_filename;
-    pagefile = open("output/"+ref_filename,"w");
-    print >> pagefile, ref_page;
-  
-    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
-    print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
+    if ref_filename!=filename:
+      #write redirect page
+      print "exporting:"+ref_filename;
+      pagefile = open("output/"+ref_filename,"w");
+      print >> pagefile, ref_page;
+
+      #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+      print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
 
   finally:
 
-#  print "semaster="+semaster;
+    #  print "semaster="+semaster;
 #    print "subject="+subject;
 #    print "subject="+subject;
 #  print page;
@@ -211,28 +236,28 @@ for line in open(sys.argv[1]):
     #start a new semaster-subject
     print line;
     lesson_idx_list = [];
-      
+
 
     title = line.split("&quot;;&quot;")[4].split("&quot")[0];
     author = line.split("&quot;;&quot;")[3];
     id = line.split("&quot;")[1];
-    
+
     print "id\t"+id  
     print "title\t"+title  
     print "author\t"+author  
-    
+
     semaster = "学期待补充";
     school = "学校待补充";
     subject = "学科待补充";
     wikitype = "课程提纲";
     item_value_set.clear();
     content_value_set.clear();
-    
+
     basic_info = title.split("-");
     if len(basic_info)==1: basic_info = title.split("—");
     if len(basic_info)>=4:
       [semaster,school,subject,wikitype] = unify_basic_info(basic_info);
-     
+
       print "semaster\t"+semaster  
       print "school\t"+school  
       print "subject\t"+subject  
@@ -242,7 +267,7 @@ for line in open(sys.argv[1]):
       subject = title;
 
     new_subject = "true";
-  
+
   divname = re.search("<(div|DIV) class=.*hdwiki_tmml.*</(div|DIV)>",line);
   if divname: 
     lesson_idx = getdata(divname.group());
@@ -296,7 +321,7 @@ for line in open(sys.argv[1]):
   if content_parsed == "start" :
     if content_data == "" : content_data = line;
     else: content_data = content_data + "\n" + line;
-    
+
     td_pos = line.find("</td>");
     if td_pos == -1 : td_pos = line.find("</TD>");
     if td_pos >=0 :
@@ -344,14 +369,14 @@ for subject in subject_school_dict:
 
   if (template!=""):
     print "export:"+filename;
-    
+
     pagefile = open("output/"+filename,"w");
     print >> pagefile, template; 
     print template;
-  
+
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
- 
+
 #semaster template:
 old_school="";
 
@@ -381,13 +406,13 @@ for semaster in semaster_school_dict:
 
   if (template!=""):
     print "export:"+filename;
-    
+
     pagefile = open("output/"+filename,"w");
     print >> pagefile, template; 
     print template;
-  
+
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
- 
+
 
 shell.close(); 
