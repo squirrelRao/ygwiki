@@ -8,7 +8,25 @@ from HTMLParser import HTMLParser;
 
 html_data = "hi"
 
-shell = open("output/import.sh","w");
+item_key_list = ["备课人","Email/MSN","所属课程组","课程名称","上课日期","上课时长","授课对象","学生信息"];
+item_value_set = {};
+
+content_key_list = ["授课目标","授课内容","授课提纲","授课步骤","教学环境、材料需求","助教需求","其他请补充"];
+content_value_set = {};
+
+semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春",""];
+subject_set = set([]);
+school_set = set([]);
+
+item_parsed = "true"
+content_parsed = "end"
+
+subject_school_dict = {};
+semaster_school_dict = {};
+page_dict = {};
+
+
+shell = open("output/import.plan.sh","w");
 
 class MyHTMLParser(HTMLParser):
   def handle_data(self,data):
@@ -65,10 +83,14 @@ def unify_basic_info(basic_info):
   if semaster == "2012秋": semaster="2012年秋";
   if semaster == "2012": semaster="2012年春";
   if semaster == "2013春": semaster="2013年春";
+  
   school = basic_info[1];
   if school == "信心": school = "信心学校";
   if school == "育才学校": school = "朝阳育才";
   if school == "光明": school = "光明学校";
+  #school stat
+  school_set.add(school);
+
   subject = basic_info[2];
   subject = subject.replace("课","");
   if subject == "兴趣科普": subject = "科普";
@@ -81,6 +103,9 @@ def unify_basic_info(basic_info):
   if subject == "四年级英语": subject = "英语四年级";
   if subject == "五年级英语": subject = "英语五年级";
   if subject == "六年级英语": subject = "英语六年级";
+  #subject stat
+  subject_set.add(subject);
+
   wikitype = "课程提纲"
 
   return [semaster,school,subject,wikitype];
@@ -91,21 +116,6 @@ def getcontent(str) :
   if end_pos == -1: end_pos=str.find("</TD>");
 
   return str[start_pos:end_pos];
-
-item_key_list = ["备课人","Email/MSN","所属课程组","课程名称","上课日期","上课时长","授课对象","学生信息"];
-item_value_set = {};
-
-content_key_list = ["授课目标","授课内容","授课提纲","授课步骤","教学环境、材料需求","助教需求","其他请补充"];
-content_value_set = {};
-
-semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春",""];
-
-item_parsed = "true"
-content_parsed = "end"
-
-subject_school_dict = {};
-semaster_school_dict = {};
-page_dict = {};
 
 def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx) :
   global semaster_school_dict;
@@ -147,6 +157,10 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   #TODO: 程序自动添加课程总结链接
   page = page + "\n" + "== '''参考页面'''==\n"
   page = page + "\n" + "[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
+  
+  page = page + "\n" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程总结";
+  page = page + "\n" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"助教反馈";
+  page = page + "\n" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现";
 
   #增加分类
   if "所属课程组" in item_value_set: 
@@ -157,8 +171,6 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   #增加导航
   page = page + "\n" + "{{" + subject +"教案}}";
 
-  if school != "":
-    page = page + "\n" + "{{" + school +"教案}}";
 
   
   filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
@@ -180,8 +192,6 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
       subject_school_dict[subject].add(school);
     else:
       subject_school_dict[subject]=set([school]);
-
-    #update template and category map
     #by-semaster
     if semaster =="" : return;
     
@@ -355,22 +365,22 @@ for subject in subject_school_dict:
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
  
 #semaster template:
-old_semaster="";
+old_school="";
 
-for subject in subject_school_dict:
-  #new subject!
+for semaster in semaster_school_dict:
+  #new semaster!
   listnum=1;
-  filename = "Template:"+subject+"教案";
-  template="{{Navbox\n|name="+subject+"教案\t|title = "+subject+"教案";
-  for semaster in semaster_list:
-    for school in subject_school_dict[subject]:
+  filename = "Template:"+semaster+"教案";
+  template="{{Navbox\n|name="+semaster+"教案\t|title = "+semaster+"教案";
+  for school in semaster_school_dict[semaster]:
+    for subject in subject_set:
       page_key = subject+"-"+semaster+"-"+school;
       if page_key in page_dict:
-        if (old_semaster!=semaster) :
-          template += "\n|list" + str(listnum) + " = " + semaster;
+        if (old_school!=school) :
+          template += "\n|list" + str(listnum) + " = " + school;
           listnum = listnum + 1;
-          old_semaster = semaster;        
-        template += "\n|group" + str(listnum) + " = " + school;
+          old_school = school;        
+        template += "\n|group" + str(listnum) + " = " + subject;
         template += "\n|list" + str(listnum) + " = ";
         listnum = listnum + 1;
 

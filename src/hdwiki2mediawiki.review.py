@@ -8,7 +8,7 @@ from HTMLParser import HTMLParser;
 
 html_data = "hi"
 
-shell = open("output/import.sh","w");
+shell = open("output/import.review.sh","w");
 
 class MyHTMLParser(HTMLParser):
   def handle_data(self,data):
@@ -207,7 +207,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 div_used = "false";
 for line in open(sys.argv[1]):
   line = line.rstrip();
-  if line.find("课程总结|")>0 :
+  if line.find("-课程总结|")>0 :
     if len(item_value_set) > 0: build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
 
     #start a new semaster-subject
@@ -323,8 +323,8 @@ old_semaster="";
 for subject in subject_school_dict:
   #new subject!
   listnum=1;
-  filename = "Template:"+subject+"教案";
-  template="{{Navbox\n|name="+subject+"教案\t|title = "+subject+"教案";
+  filename = "Template:"+subject+"总结";
+  template="{{Navbox\n|name="+subject+"总结\t|title = "+subject+"总结";
   for semaster in semaster_list:
     for school in subject_school_dict[subject]:
       page_key = subject+"-"+semaster+"-"+school;
@@ -360,8 +360,8 @@ old_semaster="";
 for subject in subject_school_dict:
   #new subject!
   listnum=1;
-  filename = "Template:"+subject+"教案";
-  template="{{Navbox\n|name="+subject+"教案\t|title = "+subject+"教案";
+  filename = "Template:"+subject+"总结";
+  template="{{Navbox\n|name="+subject+"总结\t|title = "+subject+"总结";
   for semaster in semaster_list:
     for school in subject_school_dict[subject]:
       page_key = subject+"-"+semaster+"-"+school;
