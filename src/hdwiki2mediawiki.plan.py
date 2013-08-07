@@ -154,58 +154,45 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     page = page + "\n" + "== '''" + content + "'''==\n" + content_value_set[content];
     
   #增加参考页面
-  #TODO: 程序自动添加课程总结链接
   page = page + "\n" + "== '''参考页面'''==\n"
-  page = page + "\n" + "[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
   
-  page = page + "\n" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程总结";
-  page = page + "\n" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"助教反馈";
-  page = page + "\n" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程总结]]";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"助教反馈]]";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现]]";
+  page = page + "\n\n" + "*[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
 
   #增加分类
   if "所属课程组" in item_value_set: 
-    page = page + "\n" + "[[Category:" + item_value_set["所属课程组"]+"教案]]";
+    page = page + "\n" + "[[Category:" + item_value_set["所属课程组"]+"组教案]]";
   if school != "":
     page = page + "\n" + "[[Category:" + semaster +"教案]]";
 
   #增加导航
   page = page + "\n" + "{{" + subject +"教案}}";
 
-
-  
-  filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
+ 
+  ref_filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
+  ref_filename = ref_filename.replace("/","");
+  filename = subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
   filename = filename.replace("/","");
-  print "export:"+filename;
-  #print page;
-  try :
+
+  ref_page = "#REDIRECT [[" + filename + "]]";
+
+  #update template and try :
+    print "exporting:"+filename;
     pagefile = open("output/"+filename,"w");
     print >> pagefile, page;
   
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
 
-    #update template and category map
-    #by-subject
-    if subject=="" : return;
-    
-    if subject in subject_school_dict:
-      subject_school_dict[subject].add(school);
-    else:
-      subject_school_dict[subject]=set([school]);
-    #by-semaster
-    if semaster =="" : return;
-    
-    if semaster in semaster_school_dict:
-      semaster_school_dict[semaster].add(school);
-    else:
-      semaster_school_dict[semaster]=set([school]);
+    print "exporting:"+ref_filename;
+    pagefile = open("output/"+ref_filename,"w");
+    print >> pagefile, ref_page;
+  
+    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
+    print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
 
-    page_key = subject+"-"+semaster+"-"+school;
-    if page_key in page_dict:
-      page_dict[page_key].append("[["+filename+"|"+name+"]]");
-    else:
-      page_dict[page_key]=["[["+filename+"|"+name+"]]"];
-    
   finally:
 
 #  print "semaster="+semaster;
