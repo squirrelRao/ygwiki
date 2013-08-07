@@ -8,25 +8,7 @@ from HTMLParser import HTMLParser;
 
 html_data = "hi"
 
-item_key_list = ["备课人","Email/MSN","所属课程组","课程名称","上课日期","上课时长","授课对象","学生信息"];
-item_value_set = {};
-
-content_key_list = ["授课目标","授课内容","授课提纲","授课步骤","教学环境、材料需求","助教需求","其他请补充"];
-content_value_set = {};
-
-semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春",""];
-subject_set = set([]);
-school_set = set([]);
-
-item_parsed = "true"
-content_parsed = "end"
-
-subject_school_dict = {};
-semaster_school_dict = {};
-page_dict = {};
-
-
-shell = open("output/import.plan.sh","w");
+shell = open("output/import.feedback.sh","w");
 
 class MyHTMLParser(HTMLParser):
   def handle_data(self,data):
@@ -83,14 +65,11 @@ def unify_basic_info(basic_info):
   if semaster == "2012秋": semaster="2012年秋";
   if semaster == "2012": semaster="2012年春";
   if semaster == "2013春": semaster="2013年春";
-  
+  if semaster == "2013春学期": semaster="2013年春";
   school = basic_info[1];
   if school == "信心": school = "信心学校";
   if school == "育才学校": school = "朝阳育才";
   if school == "光明": school = "光明学校";
-  #school stat
-  school_set.add(school);
-
   subject = basic_info[2];
   subject = subject.replace("课","");
   if subject == "兴趣科普": subject = "科普";
@@ -103,10 +82,7 @@ def unify_basic_info(basic_info):
   if subject == "四年级英语": subject = "英语四年级";
   if subject == "五年级英语": subject = "英语五年级";
   if subject == "六年级英语": subject = "英语六年级";
-  #subject stat
-  subject_set.add(subject);
-
-  wikitype = "课程提纲"
+  wikitype = "助教反馈"
 
   return [semaster,school,subject,wikitype];
 
@@ -117,12 +93,27 @@ def getcontent(str) :
 
   return str[start_pos:end_pos];
 
+item_key_list = [];
+item_value_set = {};
+
+content_key_list = ["课堂总体情况","期望下节课主讲复习的内容","对课程内容设置的不同见解","给讲师的评语","课堂讲课和助教中存在的问题","有什么新想法","课前主讲人和助教沟通情况","课程设计的思路","课程设计的难易程度","主讲人课堂时间把握情况","","课堂秩序维持情况","助教的表现及职责完成情况","学生课堂表现"];
+content_value_set = {};
+
+semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春",""];
+
+item_parsed = "true"
+content_parsed = "end"
+
+subject_school_dict = {};
+semaster_school_dict = {};
+page_dict = {};
+
 def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx) :
   global semaster_school_dict;
   global subject_school_dict;
   global page_dict;
   
-  page = "{{Infobox TeachingPlan";
+  page = "{{Infobox LessonFeedback";
   name = "";
   for item in item_key_list:
     if not item in item_value_set: continue;
@@ -155,45 +146,54 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     
   #增加参考页面
   page = page + "\n" + "== '''参考页面'''==\n"
-  
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程提纲]]";
   page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程总结]]";
-  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"助教反馈]]";
   page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现]]";
-  page = page + "\n\n" + "*[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
+  page = page + "\n\n" + "[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
+
 
   #增加分类
-  if "所属课程组" in item_value_set: 
-    page = page + "\n" + "[[Category:" + item_value_set["所属课程组"]+"组教案]]";
-  if school != "":
-    page = page + "\n" + "[[Category:" + semaster +"教案]]";
+  if subject != "":
+    page = page + "\n" + "[[Category:" + subject +"助教反馈]]";
 
   #增加导航
-  page = page + "\n" + "{{" + subject +"教案}}";
+  page = page + "\n" + "{{" + subject +"助教反馈}}";
 
- 
   filename = subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
   filename = filename.replace("/","");
   
-  ref_filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
-  ref_filename = ref_filename.replace("/","");
-  ref_page = "#REDIRECT [[" + filename + "]]";
-
-
-  #update template and try :
-    print "exporting:"+filename;
+  print "export:"+filename;
+  #print page;
+  try :
     pagefile = open("output/"+filename,"w");
     print >> pagefile, page;
   
-    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
 
-    print "exporting:"+ref_filename;
-    pagefile = open("output/"+ref_filename,"w");
-    print >> pagefile, ref_page;
-  
-    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
-    print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
+    #update template and category map
+    #by-subject
+    if subject=="" : return;
+    
+    if subject in subject_school_dict:
+      subject_school_dict[subject].add(school);
+    else:
+      subject_school_dict[subject]=set([school]);
 
+    #update template and category map
+    #by-semaster
+    if semaster =="" : return;
+    
+    if semaster in semaster_school_dict:
+      semaster_school_dict[semaster].add(school);
+    else:
+      semaster_school_dict[semaster]=set([school]);
+
+    page_key = subject+"-"+semaster+"-"+school;
+    if page_key in page_dict:
+      page_dict[page_key].append("[["+filename+"|"+name+"]]");
+    else:
+      page_dict[page_key]=["[["+filename+"|"+name+"]]"];
+    
   finally:
 
 #  print "semaster="+semaster;
@@ -205,7 +205,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 div_used = "false";
 for line in open(sys.argv[1]):
   line = line.rstrip();
-  if re.match("&quot;[0-9]",line) :
+  if line.find("-助教反馈")>0 :
     if len(item_value_set) > 0: build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
 
     #start a new semaster-subject
@@ -213,9 +213,9 @@ for line in open(sys.argv[1]):
     lesson_idx_list = [];
       
 
-    title = line.split("&quot;;&quot;")[4].split("&quot")[0];
-    author = line.split("&quot;;&quot;")[3];
-    id = line.split("&quot;")[1];
+    title = line.split("|")[2];
+    author = line.split("|")[1];
+    id = line.split("|")[0];
     
     print "id\t"+id  
     print "title\t"+title  
@@ -224,7 +224,7 @@ for line in open(sys.argv[1]):
     semaster = "学期待补充";
     school = "学校待补充";
     subject = "学科待补充";
-    wikitype = "课程提纲";
+    wikitype = "助教反馈";
     item_value_set.clear();
     content_value_set.clear();
     
@@ -249,7 +249,7 @@ for line in open(sys.argv[1]):
     lesson_idx_list.append(lesson_idx);
     div_used = "false";
 
-  plan_start = re.search("center.*上课准备提纲",line);
+  plan_start = re.search("hdwiki_tmml",line);
   if plan_start:
     if new_subject == "false":
       if len(item_value_set) > 0:build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
@@ -321,8 +321,8 @@ old_semaster="";
 for subject in subject_school_dict:
   #new subject!
   listnum=1;
-  filename = "Template:"+subject+"教案";
-  template="{{Navbox\n|name="+subject+"教案\t|title = "+subject+"教案";
+  filename = "Template:"+subject+"助教反馈";
+  template="{{Navbox\n|name="+subject+"助教反馈\t|title = "+subject+"助教反馈";
   for semaster in semaster_list:
     for school in subject_school_dict[subject]:
       page_key = subject+"-"+semaster+"-"+school;
@@ -332,43 +332,6 @@ for subject in subject_school_dict:
           listnum = listnum + 1;
           old_semaster = semaster;        
         template += "\n|group" + str(listnum) + " = " + school;
-        template += "\n|list" + str(listnum) + " = ";
-        listnum = listnum + 1;
-
-        for page in page_dict[page_key]:
-          template += page + " - ";
-
-        template = template[0:len(template)-2];
-
-  template += "\n}}" ;
-
-  if (template!=""):
-    print "export:"+filename;
-    
-    pagefile = open("output/"+filename,"w");
-    print >> pagefile, template; 
-    print template;
-  
-    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
-    print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
- 
-#semaster template:
-old_school="";
-
-for semaster in semaster_school_dict:
-  #new semaster!
-  listnum=1;
-  filename = "Template:"+semaster+"教案";
-  template="{{Navbox\n|name="+semaster+"教案\t|title = "+semaster+"教案";
-  for school in semaster_school_dict[semaster]:
-    for subject in subject_set:
-      page_key = subject+"-"+semaster+"-"+school;
-      if page_key in page_dict:
-        if (old_school!=school) :
-          template += "\n|list" + str(listnum) + " = " + school;
-          listnum = listnum + 1;
-          old_school = school;        
-        template += "\n|group" + str(listnum) + " = " + subject;
         template += "\n|list" + str(listnum) + " = ";
         listnum = listnum + 1;
 

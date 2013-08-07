@@ -112,7 +112,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   global subject_school_dict;
   global page_dict;
   
-  page = "{{Infobox TeachingPlan";
+  page = "{{Infobox LessonReview";
   name = "";
   for item in item_key_list:
     if not item in item_value_set: continue;
@@ -144,33 +144,42 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
     page = page + "\n" + "== '''" + content + "'''==\n" + content_value_set[content];
     
   #增加参考页面
-  #TODO: 程序自动添加课程总结链接
   page = page + "\n" + "== '''参考页面'''==\n"
-  page = page + "\n" + "[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程提纲]]";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"助教反馈]]";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现]]";
+  page = page + "\n\n" + "[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
 
   #增加分类
   if "所属课程组" in item_value_set: 
-    page = page + "\n" + "[[Category:" + item_value_set["所属课程组"]+"教案]]";
+    page = page + "\n" + "[[Category:" + item_value_set["所属课程组"]+"课程总结]]";
   if school != "":
-    page = page + "\n" + "[[Category:" + semaster +"教案]]";
+    page = page + "\n" + "[[Category:" + semaster +"课程总结]]";
 
   #增加导航
-  page = page + "\n" + "{{" + subject +"教案}}";
-
-  if school != "":
-    page = page + "\n" + "{{" + school +"教案}}";
+  page = page + "\n" + "{{" + subject +"课程总结}}";
 
   
-  filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
+  filename = subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
   filename = filename.replace("/","");
+  
+  ref_filename = name+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+wikitype;
+  ref_filename = ref_filename.replace("/","");
+  ref_page = "#REDIRECT [[" + filename + "]]";
+
   print "export:"+filename;
   #print page;
   try :
     pagefile = open("output/"+filename,"w");
     print >> pagefile, page;
   
-    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user "+author+" \"data/"+filename+"\"";
+
+    print "exporting:"+ref_filename;
+    pagefile = open("output/"+ref_filename,"w");
+    print >> pagefile, ref_page;
+  
+    print >> shell, "php maintenance/importTextFile.php --title \""+ref_filename+"\" --user "+author+" \"data/"+ref_filename+"\"";
 
     #update template and category map
     #by-subject
@@ -323,8 +332,8 @@ old_semaster="";
 for subject in subject_school_dict:
   #new subject!
   listnum=1;
-  filename = "Template:"+subject+"总结";
-  template="{{Navbox\n|name="+subject+"总结\t|title = "+subject+"总结";
+  filename = "Template:"+subject+"课程总结";
+  template="{{Navbox\n|name="+subject+"课程总结\t|title = "+subject+"课程总结";
   for semaster in semaster_list:
     for school in subject_school_dict[subject]:
       page_key = subject+"-"+semaster+"-"+school;
@@ -354,42 +363,4 @@ for subject in subject_school_dict:
     #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
     print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
  
-#semaster template:
-old_semaster="";
-
-for subject in subject_school_dict:
-  #new subject!
-  listnum=1;
-  filename = "Template:"+subject+"总结";
-  template="{{Navbox\n|name="+subject+"总结\t|title = "+subject+"总结";
-  for semaster in semaster_list:
-    for school in subject_school_dict[subject]:
-      page_key = subject+"-"+semaster+"-"+school;
-      if page_key in page_dict:
-        if (old_semaster!=semaster) :
-          template += "\n|list" + str(listnum) + " = " + semaster;
-          listnum = listnum + 1;
-          old_semaster = semaster;        
-        template += "\n|group" + str(listnum) + " = " + school;
-        template += "\n|list" + str(listnum) + " = ";
-        listnum = listnum + 1;
-
-        for page in page_dict[page_key]:
-          template += page + " - ";
-
-        template = template[0:len(template)-2];
-
-  template += "\n}}" ;
-
-  if (template!=""):
-    print "export:"+filename;
-    
-    pagefile = open("output/"+filename,"w");
-    print >> pagefile, template; 
-    print template;
-  
-    #print "php maintenance/importTextFile.php --title "+filename+" --user "+author+" data/"+filename;
-    print >> shell, "php maintenance/importTextFile.php --title \""+filename+"\" --user hdwiki2mediawiki \"data/"+filename+"\"";
- 
-
 shell.close(); 
