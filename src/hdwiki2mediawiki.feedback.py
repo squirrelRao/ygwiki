@@ -96,10 +96,10 @@ def getcontent(str) :
 item_key_list = [];
 item_value_set = {};
 
-content_key_list = ["课堂总体情况","期望下节课主讲复习的内容","对课程内容设置的不同见解","给讲师的评语","课堂讲课和助教中存在的问题","有什么新想法","课前主讲人和助教沟通情况","课程设计的思路","课程设计的难易程度","主讲人课堂时间把握情况","","课堂秩序维持情况","助教的表现及职责完成情况","学生课堂表现"];
+content_key_list = ["课堂总体情况","期望下节课主讲复习的内容","对课程内容设置的不同见解","给讲师的评语","课堂讲课和助教中存在的问题","有什么新想法","课前主讲人和助教沟通情况","课程设计的思路","课程设计的难易程度","主讲人课堂时间把握情况","课堂秩序维持情况","助教的表现及职责完成情况","学生课堂表现"];
 content_value_set = {};
 
-semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春",""];
+semaster_list = ["2010年春","2010年秋","2011年春","2011年秋","2012年春","2012年秋","2013年春"];
 
 item_parsed = "true"
 content_parsed = "end"
@@ -112,7 +112,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   global semaster_school_dict;
   global subject_school_dict;
   global page_dict;
-  
+    
   page = "{{Infobox LessonFeedback";
   name = "";
   for item in item_key_list:
@@ -206,7 +206,8 @@ div_used = "false";
 for line in open(sys.argv[1]):
   line = line.rstrip();
   if line.find("-助教反馈")>0 :
-    if len(item_value_set) > 0: build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
+    if (len(item_value_set) > 0) or (len(content_value_set) > 0): 
+      build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
 
     #start a new semaster-subject
     print line;
@@ -252,14 +253,14 @@ for line in open(sys.argv[1]):
   plan_start = re.search("hdwiki_tmml",line);
   if plan_start:
     if new_subject == "false":
-      if len(item_value_set) > 0:build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
+      if (len(item_value_set) > 0) or (len(content_value_set) > 0): 
+        build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
     new_subject = "false";
 
     item_value_set.clear();
     content_value_set.clear();
     lesson_idx_now = "";
     if div_used == "false": lesson_idx_now = lesson_idx;
-    #div_used = "true";
     #print  
     #print lesson_idx_now
 
@@ -312,6 +313,8 @@ for line in open(sys.argv[1]):
       content_name = content_key;
       content_data = "";
       content_parsed = "start"
+      #print "content_name="+content_name;
+      #print ;
 
 #build template:
 
