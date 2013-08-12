@@ -32,8 +32,8 @@ def getdata(str) :
     return html_data;
 
 def unify_data(item_data,item_name) :
+  item_data = item_data.replace("：","");
   if item_name=="课程名称": 
-    item_data = item_data.replace("：","");
     item_data = item_data.replace(":","");
   if item_name=="所属课程组": 
     item_data = item_data.replace("组","");
