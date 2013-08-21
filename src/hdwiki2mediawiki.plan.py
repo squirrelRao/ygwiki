@@ -88,6 +88,7 @@ def unify_basic_info(basic_info):
     if basic_info[2]=="科普": semaster="2012年春";
     if basic_info[2]=="科普课": semaster="2012年春";
   if semaster == "2013春": semaster="2013年春";
+  if semaster == "2013春学期": semaster="2013年春";
 
   school = basic_info[1];
   if school == "信心": school = "信心学校";
@@ -105,6 +106,8 @@ def unify_basic_info(basic_info):
   if subject == "兴趣": subject = "科普";
   if subject == "计算机": subject = "计算机（儿童）";
   if subject == "计算机儿童": subject = "计算机（儿童）";
+  if subject == "计算机成人": subject = "计算机（成人）";
+  if subject == "成人计算机": subject = "计算机（成人）";
   if subject == "四年级英语": subject = "英语四年级";
   if subject == "五年级英语": subject = "英语五年级";
   if subject == "六年级英语": subject = "英语六年级";
@@ -163,7 +166,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 
   page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程总结]]";
   page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"助教反馈]]";
-  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现]]";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+"学生课堂表现]]";
   page = page + "\n\n" + "*[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
 
   #增加分类
@@ -232,7 +235,6 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 #  print page;
     return;
 
-div_used = "false";
 try:
   conn=MySQLdb.connect(host='127.0.0.1',user='root',passwd='root',db='ygwiki',port=8889)
   cur=conn.cursor()
@@ -240,14 +242,13 @@ try:
   row = cur.fetchone()
   while row is not None:
     #start a new semaster-subject
-    lesson_idx_list = [];
 
     title = row[1];
     author = row[5];
     content = row[4]
     id=str(row[0]);
 
-    if (title.find("-课程提纲")<0) and (title.find("-上课准备提纲")<0) : 
+    if (title.find("课程大纲")<0) and (title.find("上课提纲")<0) and (title.find("课程提纲")<0) and (title.find("上课准备提纲")<0) : 
       row = cur.fetchone()
       continue;
 
@@ -281,18 +282,17 @@ try:
     content = content.replace("</TD><TD>","</TD>\n<TD>");
     content = content.replace("</div><","</div>\n<");
     content = content.replace("</DIV><","</DIV>\n<");
-    content = content.replace("></DIV",">\n</DIV<");
-    content = content.replace("></div",">\n</div<");
+    content = content.replace("></DIV",">\n</DIV");
+    content = content.replace("></div",">\n</div");
 
     new_subject = "true";
+    lesson_idx_now = "";
     for line in content.split("\n"):
 
       divname = re.search("^==.*==",line);
       if divname: 
         chapter = divname.group();
         lesson_idx = chapter[2:len(chapter)-2];
-        lesson_idx_list.append(lesson_idx);
-        div_used = "false";
 
       plan_start = re.search("center.*上课准备提纲",line);
       if plan_start:
@@ -302,9 +302,10 @@ try:
 
         item_value_set.clear();
         content_value_set.clear();
-        lesson_idx_now = "";
-        if div_used == "false": lesson_idx_now = lesson_idx;
-        #div_used = "true";
+        if lesson_idx == lesson_idx_now :
+          lesson_idx_now = lesson_idx + "2";
+        else :
+          lesson_idx_now = lesson_idx;
         #print  
         #print lesson_idx_now
 

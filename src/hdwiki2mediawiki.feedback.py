@@ -4,6 +4,7 @@
 import sys;
 import string;
 import re;
+import MySQLdb;
 from HTMLParser import HTMLParser;
 
 html_data = "hi"
@@ -148,7 +149,7 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
   page = page + "\n" + "== '''参考页面'''==\n"
   page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程提纲]]";
   page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"课程总结]]";
-  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+lesson_idx+"-"+"学生课堂表现]]";
+  page = page + "\n*[[" + subject+"-"+semaster+"-"+school+"-"+"学生课堂表现]]";
   page = page + "\n\n" + "*[http://www.ygclub.org/wiki/index.php?doc-view-"+id+".html 旧百科原始链接]\n"
 
 
@@ -202,22 +203,23 @@ def build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,s
 #  print page;
     return;
 
-div_used = "false";
-for line in open(sys.argv[1]):
-  line = line.rstrip();
-  if line.find("-助教反馈")>0 :
-    if (len(item_value_set) > 0) or (len(content_value_set) > 0): 
-      build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
-
+try:
+  conn=MySQLdb.connect(host='127.0.0.1',user='root',passwd='root',db='ygwiki',port=8889)
+  cur=conn.cursor()
+  cur.execute('select * from markup_doc')
+  row = cur.fetchone()
+  while row is not None:
     #start a new semaster-subject
-    print line;
-    lesson_idx_list = [];
-      
 
-    title = line.split("|")[2];
-    author = line.split("|")[1];
-    id = line.split("|")[0];
-    
+    title = row[1];
+    author = row[5];
+    content = row[4]
+    id=str(row[0]);
+
+    if (title.find("-助教反馈")<0) and (title.find("-助教听课反馈表")<0) : 
+      row = cur.fetchone()
+      continue;
+
     print "id\t"+id  
     print "title\t"+title  
     print "author\t"+author  
@@ -242,79 +244,101 @@ for line in open(sys.argv[1]):
     else :
       subject = title;
 
+    content = content.replace("","");
+    content = content.replace("</td><td>","</td>\n<td>");
+    content = content.replace("</TD><TD>","</TD>\n<TD>");
+    content = content.replace("</div><","</div>\n<");
+    content = content.replace("</DIV><","</DIV>\n<");
+    content = content.replace("></DIV",">\n</DIV");
+    content = content.replace("></div",">\n</div");
+
     new_subject = "true";
-  
-  divname = re.search("<(div|DIV) class=.*hdwiki_tmml.*</(div|DIV)>",line);
-  if divname: 
-    lesson_idx = getdata(divname.group());
-    lesson_idx_list.append(lesson_idx);
-    div_used = "false";
-
-  plan_start = re.search("hdwiki_tmml",line);
-  if plan_start:
-    if new_subject == "false":
-      if (len(item_value_set) > 0) or (len(content_value_set) > 0): 
-        build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
-    new_subject = "false";
-
-    item_value_set.clear();
-    content_value_set.clear();
     lesson_idx_now = "";
-    if div_used == "false": lesson_idx_now = lesson_idx;
-    #print  
-    #print lesson_idx_now
-
-  #parse metadata
-  if item_parsed == "false" :
-    if (line.find("</td>")==-1) and (line.find("</TD>")==-1) : continue;
-    item_data = getdata(line);
-    item_data = unify_data(item_data,item_name);
-    item_value_set[item_name]=item_data;
-    item_parsed = "true";
-    #print item_name + "=" + item_data;
-
-  for item_key in item_key_list:
-    item_start = re.search("(strong|STRONG)>*"+item_key+".*<",line);
-    if item_start:
-      item_name = item_key;
-      item_data = "";
-      item_parsed = "false"
-      miss_item = getdata(line).split(",");
-      if len(miss_item)>1 and miss_item[0]==item_key :
-        item_data = miss_item[1];
-        item_data = unify_data(item_data,item_name);
-        item_value_set[item_name]=item_data;
-        item_parsed = "true";
-#        print item_name + "=" + item_data;
-      elif getdata(line)!=item_key and getdata(line).find(item_key)==0 :
-        item_data = getdata(line)[len(item_key):];
-        item_data = unify_data(item_data,item_name);
-        item_value_set[item_name]=item_data;
-        item_parsed = "true";
-#        print item_name + "=" + item_data;
-
-  #parse main contents
-  if content_parsed == "start" :
-    if content_data == "" : content_data = line;
-    else: content_data = content_data + "\n" + line;
+    for line in content.split("\n"):
+  
+      divname = re.search("^==.*==",line);
+      if divname: 
+        chapter = divname.group();
+        lesson_idx = chapter[2:len(chapter)-2];
+   
+      plan_start = re.search("^==.*==",line);
+      if plan_start:
+        if new_subject == "false":
+          if (len(item_value_set) > 0) or (len(content_value_set) > 0): 
+            build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
+        new_subject = "false";
+                                 
+        item_value_set.clear();
+        content_value_set.clear();
+        if lesson_idx == lesson_idx_now :
+          lesson_idx_now = lesson_idx + "2";
+        else :
+          lesson_idx_now = lesson_idx;
+        #print  
+        #print lesson_idx_now
     
-    td_pos = line.find("</td>");
-    if td_pos == -1 : td_pos = line.find("</TD>");
-    if td_pos >=0 :
-      content_data = getcontent(content_data);
-      content_value_set[content_name] = content_data;
-      #print content_name+"="+content_data;
-      #print ;
-      content_parsed = "end";
+      #parse metadata
+      if item_parsed == "false" :
+        if (line.find("</td>")==-1) and (line.find("</TD>")==-1) : continue;
+        item_data = getdata(line);
+        item_data = unify_data(item_data,item_name);
+        item_value_set[item_name]=item_data;
+        item_parsed = "true";
+        #print item_name + "=" + item_data;
+    
+      for item_key in item_key_list:
+        item_start = re.search("(strong|STRONG)>*"+item_key+".*<",line);
+        if item_start:
+          item_name = item_key;
+          item_data = "";
+          item_parsed = "false"
+          miss_item = getdata(line).split(",");
+          if len(miss_item)>1 and miss_item[0]==item_key :
+            item_data = miss_item[1];
+            item_data = unify_data(item_data,item_name);
+            item_value_set[item_name]=item_data;
+            item_parsed = "true";
+    #        print item_name + "=" + item_data;
+          elif getdata(line)!=item_key and getdata(line).find(item_key)==0 :
+            item_data = getdata(line)[len(item_key):];
+            item_data = unify_data(item_data,item_name);
+            item_value_set[item_name]=item_data;
+            item_parsed = "true";
+    #        print item_name + "=" + item_data;
+    
+      #parse main contents
+      if content_parsed == "start" :
+        if content_data == "" : content_data = line;
+        else: content_data = content_data + "\n" + line;
+        
+        td_pos = line.find("</td>");
+        if td_pos == -1 : td_pos = line.find("</TD>");
+        if td_pos >=0 :
+          content_data = getcontent(content_data);
+          content_value_set[content_name] = content_data;
+          #print content_name+"="+content_data;
+          #print ;
+          content_parsed = "end";
+    
+      for content_key in content_key_list:
+        content_start = re.search(">*"+content_key+".*<",line);
+        if content_start:
+          content_name = content_key;
+          content_data = "";
+          content_parsed = "start"
+          #print "content_name="+content_name;
+          #print ;
 
-  for content_key in content_key_list:
-    content_start = re.search(">*"+content_key+".*<",line);
-    if content_start:
-      content_name = content_key;
-      content_data = "";
-      content_parsed = "start"
-      #print "content_name="+content_name;
-      #print ;
+    if (len(item_value_set) > 0) or (len(content_value_set) > 0): build_wiki_page(item_value_set,content_value_set,id,author,semaster,school,subject,wikitype,lesson_idx_now);
+
+    row = cur.fetchone()
+
+  cur.close()
+  conn.close()
+
+except MySQLdb.Error,e:
+  print "Mysql Error %d: %s" % (e.args[0], e.args[1])
+
 
 #build template:
 
