@@ -1,0 +1,16 @@
+29309 error Error: read ETIMEDOUT
+29309 error     at errnoException (net.js:863:11)
+29309 error     at TCP.onread (net.js:524:19)
+29310 error If you need help, you may report this log at:
+29310 error     <http://github.com/isaacs/npm/issues>
+29310 error or email it to:
+29310 error     <npm-@googlegroups.com>
+29311 error System Darwin 12.0.0
+29312 error command "/usr/local/Cellar/node/0.10.0/bin/node" "/usr/local/bin/npm" "install" "-g" "phonegap"
+29313 error cwd /Users/yuan/ProjectsArranged/MiddleScaleProjects/ygwikiMobile/reference/WikipediaMobile
+29314 error node -v v0.10.0
+29315 error npm -v 1.2.14
+29316 error syscall read
+29317 error code ETIMEDOUT
+29318 error errno ETIMEDOUT
+29319 verbose exit [ 1, true ]
