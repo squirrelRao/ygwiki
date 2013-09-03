@@ -366,24 +366,34 @@ for subject in subject_school_dict:
   listnum=1;
   filename = "Template:"+subject+"课程总结";
   template="{{Navbox\n|name="+subject+"课程总结\t|title = "+subject+"课程总结";
+  new_template = "true";
   for semaster in semaster_list:
+    new_semaster = "true";
+    sub_listnum=1;
     for school in subject_school_dict[subject]:
       page_key = subject+"-"+semaster+"-"+school;
       if page_key in page_dict:
-        if (old_semaster!=semaster) :
-          template += "\n|list" + str(listnum) + " = " + semaster;
+        if new_semaster == "true":
+          if new_template != "true":
+            template = template + "\n  }}";
+          new_template = "false";
+          template += "\n|group" + str(listnum) + " = " + semaster;
+          template += "\n|list" + str(listnum) + " = ";
+          template += "\n  {{Navbox subgroup";
+          new_semaster = "false";
           listnum = listnum + 1;
-          old_semaster = semaster;        
-        template += "\n|group" + str(listnum) + " = " + school;
-        template += "\n|list" + str(listnum) + " = ";
-        listnum = listnum + 1;
 
+        template += "\n    |group" + str(sub_listnum) + " = " + school;
+        template += "\n    |list" + str(sub_listnum) + " = ";
+        sub_listnum = sub_listnum + 1;
+  
         for page in page_dict[page_key]:
           template += page + " - ";
 
         template = template[0:len(template)-2];
 
-  template += "\n}}" ;
+  template = template + "\n  }}";
+  template += "\n}}";
 
   if (template!=""):
     print "export:"+filename;
