@@ -79,13 +79,18 @@ window.chrome = function() {
 		var selector = "#content_" + sectionID;
 		var $contentBlock = $(selector);
 		if(!$contentBlock.data('populated')) {
-			app.curPage.requestSectionHtml( sectionID ).done( function( sectionHtml ) {
+            
+			app.curPage.requestSectionHtml( sectionID ).done(
+                                                             
+                function( sectionHtml ) {
+                                                             
 				var $el = $( sectionHtml );
 				$contentBlock.append( $el ).data( 'populated', true );
 				chrome.initContentLinkHandlers( $el );
 				scrubInlineStyles( $contentBlock );
-				mw.mobileFrontend.references.init( $contentBlock[0], false, { animation: 'none', onClickReference: onClickReference } );
+				//mw.mobileFrontend.references.init( $contentBlock[0], false, { animation: 'none', onClickReference: onClickReference } );
 				d.resolve();
+                                                              
 			});
 		} else {
 			d.resolve();
@@ -300,7 +305,7 @@ window.chrome = function() {
 		$('#settings').hide();
 		$('#about-page-overlay').hide();
 		$('#langlinks').hide();
-		$('#nearby-overlay').hide();
+		//$('#nearby-overlay').hide();
 		$('html').removeClass('overlay-open');
 	}
 

@@ -48,9 +48,9 @@ window.app = function() {
 		chrome.scrollTo("#content", 0);
 		appHistory.addCurrentPage();
 		chrome.toggleMoveActions();
-		geo.addShowNearbyLinks();
+		//geo.addShowNearbyLinks();
 		if (page != undefined) chrome.renderHtml(page);
-		$("#page-footer").show();
+		//$("#page-footer").show();
 		chrome.showContent();
 		chrome.hideSpinner();
 	}
@@ -62,6 +62,7 @@ window.app = function() {
 			loadLocalPage('error.html');
 		}
 		setMenuItemState('read-in', false);
+        
 		setPageActionsState(false);
 		chrome.hideSpinner();
 		$("#page-footer").hide();
@@ -80,6 +81,8 @@ window.app = function() {
 				if( !page.isCompletePage ) {
 					page.requestCompletePage().done( function() {
 						console.log("Full page retreived!");
+                        savedPages.saveCurrentPage({"silent":true});
+                                                        
 					});
 				}
 				d.resolve(page);
@@ -131,7 +134,7 @@ window.app = function() {
 	}
 
 	function setContentLanguage(language) {
-		preferencesDB.set('language', language);
+		preferencesDB.set('language', "zh");
 		app.baseURL = app.baseUrlForLanguage(language);
 	}
 
@@ -215,6 +218,9 @@ window.app = function() {
 			unescaped = decodeURIComponent(page),
 			title = unescaped.replace(/_/g, ' ');
         if (title.split("title=").length>1) title = title.split("title=")[1];
+        if (title.split("=edit").length>1) title = "please use a desktop computer!";
+        if (title.split("#").length>1) title = title.split("#")[0];
+        
 		return title;
 	}
 	function getCurrentTitle() {

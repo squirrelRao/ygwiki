@@ -6,7 +6,7 @@ if(navigator.userAgent.match(/OS 4_2/g)) {
 }
 
 function getAboutVersionString() {
-	return "3.3";
+	return "1.0";
 }
 
 (function() {
@@ -74,10 +74,6 @@ function popupMenu(items, callback, options) {
 
 chrome.addPlatformInitializer(function() {
 	console.log("Logging in!");
-    window.plugins.FB = CDV.FB;
-	window.plugins.FB.init("[FB-APP-ID]", function() {
-		console.log("failed FB init:(");
-	});
 	console.log("Logged in!");
 	// Fix scrolling on iOS 4.x after orient change
 	window.addEventListener('resize', function() {
