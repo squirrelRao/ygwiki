@@ -1,4 +1,4 @@
-package org.wikipedia;
+package org.ygwiki;
 
 import java.net.URLEncoder;
 import java.util.Locale;

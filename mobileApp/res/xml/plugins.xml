@@ -42,8 +42,8 @@
     <plugin name="ToastPlugin" value="com.chariotsolutions.toast.plugin.ToastPlugin" />
     <plugin name="Share" value="com.schaul.plugins.share.Share"/>
     <plugin name="URLCache" value="com.phonegap.urlcache.URLCache"/>
-    <plugin name="ApplicationVersion" value="org.wikipedia.ApplicationVersion"/>
+    <plugin name="ApplicationVersion" value="org.ygwiki.ApplicationVersion"/>
     <plugin name="GlobalizationCommand" value="com.phonegap.plugins.globalization.GlobalizationCommand"/>
     <plugin name="WebIntent" value="com.borismus.webintent.WebIntent"/>
-    <plugin name="Preferences" value="org.wikipedia.PreferencesPlugin"/>
+    <plugin name="Preferences" value="org.ygwiki.PreferencesPlugin"/>
 </plugins>

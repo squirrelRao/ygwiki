@@ -1,4 +1,4 @@
-package org.wikipedia;
+package org.ygwiki;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
